@@ -1,0 +1,4 @@
+# MemPerf — Python dependencies
+# Requires Python >= 3.11
+
+pydantic>=2.0
