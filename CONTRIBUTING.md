@@ -21,12 +21,21 @@ If a question type is generating wrong `evidence_event_ids`, or `RecallResult` m
 - [ ] No new dependencies added to MemPerf itself (`requirements.txt` stays minimal)
 - [ ] Commit message explains *why*, not just *what*
 
+## Running tests
+
+```bash
+pip install pytest
+python -m pytest tests/ -v
+```
+
+The test suite covers scorer arithmetic (R@K, MRR, multi-evidence partial credit) and runs in under a second with no external dependencies.
+
 ## Running the benchmark locally
 
 ```bash
 pip install -r requirements.txt   # requires Python >= 3.11
-python benchmark.py --system simple --retrieval-only
-python benchmark.py --system oracle --retrieval-only
+python benchmark.py --system simple --events 20 --questions 30 --seeds 42
+python benchmark.py --system oracle --events 20 --questions 30 --seeds 42
 ```
 
 ## Questions
