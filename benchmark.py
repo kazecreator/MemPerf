@@ -120,8 +120,13 @@ class SubprocessAdapter:
     The bridge protocol (two operations):
 
       ingest  → {"op": "ingest", "events": [{id, title, content, time,
-                                              characters, locations}]}
+                                              characters, locations,
+                                              conversation}]}
               ← {"ok": true}
+
+      `conversation` is a pre-formatted [user, assistant] message pair
+      representing the event.  Use it when your system ingests chat
+      history; ignore it for direct-storage systems.
 
       retrieve → {"op": "retrieve", "query": "...",
                   "time_point": "YYYY-MM-DD" | null, "top_k": 10}
@@ -156,18 +161,50 @@ class SubprocessAdapter:
             raise RuntimeError(f"Bridge process exited unexpectedly (command: {self._command})")
         return json.loads(response)
 
+    @staticmethod
+    def _event_to_conversation(ev) -> list:
+        """Represent a MemoryEvent as a user/assistant exchange.
+
+        Uses explicit field labels so LLM-based extractors reliably
+        preserve structured attributes (id, date, participants, location).
+        The event_id appears in both turns as a plain label [ID:Exxxx].
+        """
+        who   = f"\nParticipants: {', '.join(sorted(ev.characters))}" if ev.characters else ""
+        where = f"\nLocation: {', '.join(sorted(ev.locations))}"       if ev.locations  else ""
+        return [
+            {
+                "role":    "user",
+                "content": (
+                    f"Please remember this event.\n"
+                    f"ID: {ev.id}\n"
+                    f"Date: {ev.time}\n"
+                    f"Description: {ev.content}"
+                    f"{who}{where}"
+                ),
+            },
+            {
+                "role":    "assistant",
+                "content": (
+                    f"Stored. [ID:{ev.id}] [DATE:{ev.time}]"
+                    + (f" [WHO:{','.join(sorted(ev.characters))}]" if ev.characters else "")
+                    + (f" [LOC:{','.join(sorted(ev.locations))}]"  if ev.locations  else "")
+                ),
+            },
+        ]
+
     def ingest(self, events):
         self._start()
         self._call({
             "op": "ingest",
             "events": [
                 {
-                    "id":         ev.id,
-                    "title":      ev.title,
-                    "content":    ev.content,
-                    "time":       str(ev.time),
-                    "characters": sorted(ev.characters),
-                    "locations":  sorted(ev.locations),
+                    "id":           ev.id,
+                    "title":        ev.title,
+                    "content":      ev.content,
+                    "time":         str(ev.time),
+                    "characters":   sorted(ev.characters),
+                    "locations":    sorted(ev.locations),
+                    "conversation": self._event_to_conversation(ev),
                 }
                 for ev in events
             ],
@@ -368,7 +405,8 @@ def main():
     agg = aggregate(all_results)
     print_report(system_name, agg)
 
-    out_path = args.out or f"results_{system_name}.json"
+    safe_name = system_name.replace("/", "_").replace(" ", "_")
+    out_path = args.out or f"results_{safe_name}.json"
     with open(out_path, "w") as f:
         json.dump({"system": system_name, "seeds": all_results, "aggregate": agg}, f, indent=2, default=str)
     print(f"Results saved → {out_path}")
