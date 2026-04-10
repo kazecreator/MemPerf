@@ -7,7 +7,7 @@ Uses TeleMem's full pipeline: conversation ingestion → LLM fact extraction
 Ingestion uses TeleMem's add() method (LLM extracts and stores facts).
 Retrieval queries the events FAISS index directly because TeleMem's search()
 only queries person_1/person_2 and skips the events index.
-The LLM preserves the event_id in extracted summaries (e.g. "事件编号E0001"),
+The LLM preserves the event_id in extracted summaries (e.g. "Event ID E0001"),
 so event_ids are recovered by regex from matched summaries.
 
 Install:
