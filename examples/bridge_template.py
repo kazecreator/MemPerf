@@ -83,7 +83,7 @@ def handle_ingest(events: list) -> None:
         # The assistant turn embeds [ID:Exxxx] so extractors are likely to
         # keep it.  Maintain a local list to recover ids if needed.
 
-    ── Approach C — LLM-extraction systems (Mem0 / TeleMem style) ────────────
+    ── Approach C — LLM-extraction systems ──────────────────────────────────
         The LLM rewrites content during ingestion and may not preserve the
         event_id verbatim.  Keep a local id list; use the system only for
         ranking, not for id recovery.
