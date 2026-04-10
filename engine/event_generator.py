@@ -632,37 +632,183 @@ class TMGenerator:
         tpl = random.choice(kind_templates)
         return tpl.format(char=char, other=other, topic=topic, location=location)
 
+    # Content templates per event kind.
+    # Written WITHOUT the event title so that keyword systems cannot trivially
+    # win by matching the title tokens embedded in the question.
+    _CONTENT_TEMPLATES = {
+        "meeting": [
+            "{chars} gathered at {loc} to align on priorities. {detail}",
+            "A session at {loc} brought together {chars}. {detail}",
+            "{chars} assembled at {loc} to work through outstanding issues. {detail}",
+        ],
+        "conversation": [
+            "{chars} exchanged views at {loc}. {detail}",
+            "At {loc}, {chars} spoke at length about current concerns. {detail}",
+            "An informal exchange unfolded between {chars} at {loc}. {detail}",
+        ],
+        "decision": [
+            "{chars} reached a conclusion at {loc}. {detail}",
+            "After deliberation at {loc}, {chars} settled on a course of action. {detail}",
+            "A final call was made by {chars} at {loc}. {detail}",
+        ],
+        "milestone": [
+            "{chars} achieved a significant milestone at {loc}. {detail}",
+            "Progress culminated for {chars} at {loc}. {detail}",
+            "A key goal was reached at {loc} by {chars}. {detail}",
+        ],
+        "conflict": [
+            "{chars} found themselves at odds at {loc}. {detail}",
+            "Disagreement surfaced between {chars} at {loc}. {detail}",
+            "Tensions emerged among {chars} at {loc}. {detail}",
+        ],
+        "collaboration": [
+            "{chars} combined their efforts at {loc}. {detail}",
+            "Joint work between {chars} began at {loc}. {detail}",
+            "{chars} coordinated closely at {loc}. {detail}",
+        ],
+        "funding": [
+            "{chars} secured new resources at {loc}. {detail}",
+            "A financial commitment was reached at {loc} involving {chars}. {detail}",
+            "{chars} finalised an investment deal at {loc}. {detail}",
+        ],
+        "product launch": [
+            "{chars} unveiled something new at {loc}. {detail}",
+            "A new release went live, spearheaded by {chars} from {loc}. {detail}",
+            "{chars} completed a long-awaited launch at {loc}. {detail}",
+        ],
+        "team hiring": [
+            "{chars} welcomed a new addition at {loc}. {detail}",
+            "The group at {loc} grew as {chars} finalised a key hire. {detail}",
+            "{chars} brought on a new member at {loc}. {detail}",
+        ],
+        "pivot": [
+            "{chars} shifted direction at {loc}. {detail}",
+            "A strategic change was announced by {chars} at {loc}. {detail}",
+            "{chars} decided to change course at {loc}. {detail}",
+        ],
+        "partnership": [
+            "{chars} formalised a new alliance at {loc}. {detail}",
+            "An agreement between {chars} was reached at {loc}. {detail}",
+            "{chars} signed a collaboration agreement at {loc}. {detail}",
+        ],
+        "arrival": [
+            "{chars} reached {loc} after a journey. {detail}",
+            "The group including {chars} arrived at {loc}. {detail}",
+            "{chars} checked in at {loc}. {detail}",
+        ],
+        "sightseeing": [
+            "{chars} explored {loc}. {detail}",
+            "Time was spent by {chars} taking in the sights at {loc}. {detail}",
+            "{chars} spent the day visiting {loc}. {detail}",
+        ],
+        "meal": [
+            "{chars} sat down to eat at {loc}. {detail}",
+            "Over a meal at {loc}, {chars} gathered. {detail}",
+            "{chars} shared a table at {loc}. {detail}",
+        ],
+        "incident": [
+            "{chars} dealt with an unexpected situation at {loc}. {detail}",
+            "Something unplanned occurred for {chars} at {loc}. {detail}",
+            "{chars} had to respond to an urgent matter at {loc}. {detail}",
+        ],
+        "departure": [
+            "{chars} left {loc} to continue their journey. {detail}",
+            "The group including {chars} departed from {loc}. {detail}",
+            "{chars} wrapped up and headed out from {loc}. {detail}",
+        ],
+        "diagnosis": [
+            "Medical staff reviewed the situation of {chars} at {loc}. {detail}",
+            "{chars} received a clinical update at {loc}. {detail}",
+            "Test results were discussed with {chars} at {loc}. {detail}",
+        ],
+        "treatment": [
+            "{chars} underwent a new procedure at {loc}. {detail}",
+            "Care was provided to {chars} at {loc}. {detail}",
+            "A treatment plan was started for {chars} at {loc}. {detail}",
+        ],
+        "recovery": [
+            "{chars} showed signs of improvement at {loc}. {detail}",
+            "Progress in recovery was noted for {chars} at {loc}. {detail}",
+            "The situation improved for {chars} at {loc}. {detail}",
+        ],
+        "family meeting": [
+            "{chars} gathered at {loc} to discuss personal matters. {detail}",
+            "A private gathering of {chars} took place at {loc}. {detail}",
+            "{chars} sat down together at {loc} for a family discussion. {detail}",
+        ],
+        "complication": [
+            "An unexpected setback arose for {chars} at {loc}. {detail}",
+            "{chars} faced difficulties at {loc}. {detail}",
+            "Things became more complicated for {chars} at {loc}. {detail}",
+        ],
+        "discharge": [
+            "{chars} were cleared to leave {loc}. {detail}",
+            "Permission to depart was granted to {chars} at {loc}. {detail}",
+            "{chars} completed their stay at {loc}. {detail}",
+        ],
+        "paper submission": [
+            "{chars} completed a major written work at {loc}. {detail}",
+            "Months of effort culminated in a submission by {chars} at {loc}. {detail}",
+            "{chars} sent off their manuscript from {loc}. {detail}",
+        ],
+        "experiment": [
+            "{chars} ran tests at {loc}. {detail}",
+            "Laboratory work progressed for {chars} at {loc}. {detail}",
+            "{chars} conducted a series of trials at {loc}. {detail}",
+        ],
+        "seminar": [
+            "{chars} attended a presentation at {loc}. {detail}",
+            "Knowledge was shared among {chars} at {loc}. {detail}",
+            "{chars} participated in a knowledge-sharing session at {loc}. {detail}",
+        ],
+        "grant application": [
+            "{chars} submitted a proposal from {loc}. {detail}",
+            "Funding was sought by {chars} at {loc}. {detail}",
+            "{chars} put in an application for support at {loc}. {detail}",
+        ],
+        "conference": [
+            "{chars} represented their work at {loc}. {detail}",
+            "Peers gathered with {chars} at {loc} for an academic exchange. {detail}",
+            "{chars} presented findings to colleagues at {loc}. {detail}",
+        ],
+    }
+
+    _MOOD_DETAILS = {
+        "productive":   "Great progress was made.",
+        "tense":        "There was friction, but it was eventually resolved.",
+        "celebratory":  "Everyone was excited and relieved.",
+        "routine":      "The day proceeded without incident.",
+        "chaotic":      "Things were disorganised but ultimately resolved.",
+        "stressful":    "Long hours and high pressure shaped the atmosphere.",
+        "triumphant":   "A major success was achieved.",
+        "desperate":    "Difficult decisions had to be made under pressure.",
+        "hopeful":      "There was renewed optimism about what lay ahead.",
+        "anxious":      "Uncertainty about the outcome caused visible concern.",
+        "relieved":     "A burden was lifted after the event concluded.",
+        "gloomy":       "The mood remained somber throughout.",
+        "excited":      "Enthusiasm ran high among everyone present.",
+        "frustrated":   "Several obstacles made progress difficult.",
+        "relaxed":      "The atmosphere was calm and unhurried.",
+        "focused":      "Everyone present was deeply concentrated on the task.",
+        "adventurous":  "An unexpected element made things interesting.",
+        "tired":        "Fatigue was visible, though spirits stayed up.",
+        "delighted":    "People left with a sense of real satisfaction.",
+    }
+
     def _generate_event_content(self, kind: str, title: str,
                                  characters: List[Character],
                                  locations: List[Location],
                                  mood: str) -> str:
-        char_names = ", ".join(c.name for c in characters[:3]) if characters else "the team"
-        loc_name = locations[0].name if locations else "office"
+        chars  = ", ".join(c.name for c in characters[:3]) if characters else "the team"
+        loc    = locations[0].name if locations else "the venue"
+        detail = self._MOOD_DETAILS.get(mood, "The event proceeded as planned.")
 
-        mood_details = {
-            "productive": "Great progress was made.",
-            "tense": "There was some friction but it was resolved.",
-            "celebratory": "Everyone was excited and relieved.",
-            "routine": "A normal day with standard activities.",
-            "chaotic": "Things were disorganized but ultimately okay.",
-            "stressful": "Long hours and high pressure.",
-            "triumphant": "A major success was achieved.",
-            "desperate": "Difficult decisions had to be made.",
-            "hopeful": "There was renewed optimism about the future.",
-            "anxious": "Uncertainty about the outcome caused worry.",
-            "relieved": "A burden was lifted after the event.",
-            "gloomy": "The mood was somber throughout.",
-            "excited": "Enthusiasm was high among all participants.",
-            "frustrated": "Several obstacles made progress difficult.",
-            "relaxed": "A calm and peaceful gathering.",
-            "focused": "Deep concentration on the task at hand.",
-            "adventurous": "An unexpected adventure unfolded.",
-            "tired": "Exhaustion was apparent but spirits remained high.",
-            "delighted": "Everyone left with big smiles.",
-        }
-
-        detail = mood_details.get(mood, "The event proceeded as planned.")
-        return f"{title}. Participants: {char_names}. Location: {loc_name}. {detail}"
+        templates = self._CONTENT_TEMPLATES.get(kind, [
+            "{chars} came together at {loc}. {detail}",
+            "An event involving {chars} took place at {loc}. {detail}",
+        ])
+        tpl = random.choice(templates)
+        return tpl.format(chars=chars, loc=loc, detail=detail)
 
     def _mood_to_valence(self, mood: str) -> float:
         valence_map = {

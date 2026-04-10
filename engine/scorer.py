@@ -44,20 +44,32 @@ class RetrievalScorer:
         evidence_ids = set(question.evidence_event_ids)
         retrieved_ids = [r.event_id for r in retrieved_results]
 
-        k = min(len(evidence_ids), 10) if evidence_ids else 5
-
         def recall_at(n):
             if not evidence_ids:
                 return 1.0
             return len(evidence_ids & set(retrieved_ids[:n])) / len(evidence_ids)
 
-        mrr = 0.0
-        for rank, rid in enumerate(retrieved_ids, 1):
-            if rid in evidence_ids:
-                mrr = 1.0 / rank
-                break
+        # R@K: fraction of evidence events found anywhere in the returned list.
+        # Using the full returned list (not capped at |evidence|) means R@K is
+        # always >= R@5 and gives a consistent "did the system surface everything?"
+        # signal regardless of how many evidence events a question has.
+        rk = recall_at(len(retrieved_ids))
 
-        rk = recall_at(k)
+        # MRR: average reciprocal rank across all evidence events.
+        # For single-evidence questions this equals the classic MRR.
+        # For multi-evidence questions (temporal_duration, sequential, etc.)
+        # it rewards finding all relevant events, not just the first one.
+        if not evidence_ids:
+            mrr = 1.0
+        else:
+            rr_sum = 0.0
+            for eid in evidence_ids:
+                for rank, rid in enumerate(retrieved_ids, 1):
+                    if rid == eid:
+                        rr_sum += 1.0 / rank
+                        break
+            mrr = rr_sum / len(evidence_ids)
+
         return RecallResult(
             question_id=question.id,
             question_type=question.type.value if hasattr(question.type, "value") else str(question.type),

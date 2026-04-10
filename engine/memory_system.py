@@ -22,9 +22,17 @@ Usage:
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from typing import List, Optional, Set, Dict
+import datetime
 import re
 
 from engine.time_machine import TimePoint, MemoryEvent
+
+
+def _tp_days_gap(earlier: TimePoint, later: TimePoint) -> int:
+    """Days from earlier to later TimePoint (non-negative when earlier <= later)."""
+    d1 = datetime.date(earlier.year, earlier.month, earlier.day)
+    d2 = datetime.date(later.year,   later.month,   later.day)
+    return (d2 - d1).days
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -332,6 +340,16 @@ class InvertedIndexSystem(BaseMemorySystem):
                 new_score = score + self._token_weight
                 new_method = method + f"tok:{tok};"
                 event_scores[eid] = (new_score, new_method)
+
+        # Temporal proximity boost: events closer to time_point rank higher.
+        # Max boost is 0.10 (same-day); decays linearly to 0 at 365 days back.
+        if time_point and event_scores:
+            for eid, (score, method) in list(event_scores.items()):
+                ev = self._events[eid]
+                days_back = _tp_days_gap(ev.time, time_point)
+                boost = max(0.0, 0.10 * (1.0 - min(days_back, 365) / 365.0))
+                if boost > 0:
+                    event_scores[eid] = (score + boost, method)
 
         # Sort by score
         sorted_ids = sorted(event_scores.keys(), key=lambda eid: event_scores[eid][0], reverse=True)
